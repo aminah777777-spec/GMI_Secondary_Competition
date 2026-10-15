@@ -296,7 +296,7 @@
                 <div id="admin-error" class="hidden text-red-400 text-sm text-center">Invalid password</div>
                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition">Login</button>
             </form>
-            <p class="text-xs text-gray-500 mt-4 text-center">Demo password: admin123</p>
+            
         </section>
 
         <!-- SCREEN 6: Admin Dashboard -->
@@ -360,7 +360,7 @@
 
     <script>
         // Google Apps Script backend
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzSggIKx_aB-HSeEETBd3q6bx6KXmbf2VHwYGS9SoYDm2dB2UlQieznO4fbYnasdJWPRw/exec";
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwmrnng806cWjQSuZCLK7557dirNKq1aRjSmZ0-_cqhCK_ksEyYWOigqzR-5bWmQO4/exec";
 
         function appsScriptRequest(params) {
             return new Promise((resolve, reject) => {
@@ -950,7 +950,7 @@
         function handleAdminLogin(e) {
             e.preventDefault();
             const pwd = document.getElementById('admin-pwd').value;
-            if (pwd === 'admin123') {
+            if (pwd === 'Medo2002@2002') {
                 loadAdminDashboard();
             } else {
                 document.getElementById('admin-error').classList.remove('hidden');
