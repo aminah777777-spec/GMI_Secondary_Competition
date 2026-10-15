@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GMI Computer Competition</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            blue: '#112240',
+                            orange: '#F97316',
+                            light: '#E2E8F0'
+                        }
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'arabic': ['Cairo', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .rtl {
+            font-family: 'Cairo', sans-serif;
+            direction: rtl;
+        }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Timer Ring Animation */
+        .timer-ring {
+            transform: rotate(-90deg);
+        }
+        .timer-circle {
+            transition: stroke-dashoffset 1s linear;
+            stroke-dasharray: 283; /* 2 * pi * r (45) */
+            stroke-dashoffset: 0;
+        }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .option-btn {
+            transition: all 0.2s ease;
+        }
+        .option-btn:hover:not(:disabled) {
+            transform: translateX(5px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .rtl .option-btn:hover:not(:disabled) {
+            transform: translateX(-5px);
+        }
+        .option-btn.selected {
+            background-color: #F97316;
+            border-color: #F97316;
+            color: white;
+        }
+
+        /* Custom Scrollbar for Admin Table */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Particle Background Effect */
+        #particles {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            background-image: radial-gradient(circle at 15% 50%, rgba(249, 115, 22, 0.1), transparent 25%),
+                              radial-gradient(circle at 85% 30%, rgba(30, 58, 138, 0.2), transparent 25%);
+        }
+    </style>
+</head>
+<body class="text-gray-100 antialiased flex flex-col items-center p-4 sm:p-8">
+    <div id="particles"></div>
+
+    <!-- Header (Always visible) -->
+    <header class="w-full max-w-4xl mx-auto flex flex-col items-center justify-center mb-8 z-10 text-center">
+        <img src="logo.jpeg" alt="GMI Logo" class="h-32 sm:h-48 object-contain mb-6 rounded-xl shadow-2xl drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+        <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-wide t-school-name">AlGhad AlMoshreq Azharian Language Institute</h1>
+        <p class="text-brand-orange font-semibold mt-1 t-dept">Computer Department – Secondary Stage</p>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="w-full max-w-4xl flex-grow flex flex-col items-center justify-center relative z-10">
+
+        <!-- SCREEN 1: Welcome & Language Selection -->
+        <section id="screen-welcome" class="screen active flex-col items-center w-full max-w-2xl text-center glass-panel p-8 sm:p-12">
+            <div class="mb-8">
+                <i class="fas fa-laptop-code text-5xl text-brand-orange mb-4"></i>
+                <h2 class="text-3xl sm:text-5xl font-extrabold mb-4 uppercase tracking-wider text-white drop-shadow-md">Welcome to the<br><span class="text-brand-orange">Computer Competition</span></h2>
+                <p class="text-lg text-gray-300 italic">Test your knowledge, challenge yourself, and show your computer skills!</p>
+            </div>
+            
+            <div class="w-full border-t border-gray-600 my-8"></div>
+
+            <h3 class="text-xl font-semibold mb-6">Please choose your language / يرجى اختيار اللغة</h3>
+            <div class="flex flex-col sm:flex-row gap-4 w-full">
+                <button onclick="selectLanguage('en')" class="flex-1 bg-brand-blue hover:bg-blue-800 border-2 border-blue-500 text-white font-bold py-4 px-6 rounded-xl text-xl transition transform hover:scale-105 shadow-lg flex items-center justify-center gap-3">
+                    English
+                </button>
+                <button onclick="selectLanguage('ar')" class="flex-1 bg-brand-blue hover:bg-blue-800 border-2 border-brand-orange text-white font-bold py-4 px-6 rounded-xl text-2xl font-arabic transition transform hover:scale-105 shadow-lg flex items-center justify-center gap-3">
+                    العربية
+                </button>
+            </div>
+            
+            <!-- Warning Notice Additions -->
+            <div class="mt-6 p-4 bg-red-900/30 border border-red-500/50 rounded-lg w-full flex flex-col items-center justify-center gap-2">
+                <p class="text-sm sm:text-base text-red-200 font-bold">
+                    ⚠️ This competition is for secondary stage students only.
+                </p>
+                <p class="text-sm sm:text-base text-red-200 font-bold font-arabic">
+                    ⚠️ هذه المسابقة مخصصة لطلاب المرحلة الثانوية فقط.
+                </p>
+            </div>
+
+            <button onclick="showAdminLogin()" class="mt-8 text-sm text-gray-500 hover:text-white transition underline">Admin Access</button>
+        </section>
+
+        <!-- SCREEN 2: Registration -->
+        <section id="screen-register" class="screen flex-col items-center w-full max-w-xl glass-panel p-8">
+            <button onclick="switchScreen('welcome')" class="self-start mb-6 text-gray-400 hover:text-white transition flex items-center gap-2">
+                <i class="fas fa-arrow-left" id="btn-back-icon"></i> <span class="t-back">Back</span>
+            </button>
+            
+            <h2 class="text-2xl sm:text-3xl font-bold mb-6 text-center text-brand-orange t-reg-title">Student Registration</h2>
+            
+            <form id="registration-form" class="w-full flex flex-col gap-5" onsubmit="handleRegistration(event)">
+                <div>
+                    <label for="reg-name" class="block text-sm font-medium text-gray-300 mb-1 t-reg-name">Full Name</label>
+                    <input type="text" id="reg-name" required class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange transition">
+                </div>
+                
+                <div>
+                    <label for="reg-class" class="block text-sm font-medium text-gray-300 mb-1 t-reg-class">Class</label>
+                    <input type="text" id="reg-class" required placeholder="e.g. 10A, 3rd Prep" class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange transition">
+                </div>
+
+                <div>
+                    <label for="reg-email" class="block text-sm font-medium text-gray-300 mb-1 t-reg-email">School Email</label>
+                    <input type="email" id="reg-email" required placeholder="student@alghadalmoshreq.edu.eg" class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange transition">
+                    <p class="text-xs text-gray-400 mt-2 flex items-start gap-1"><i class="fas fa-info-circle mt-0.5"></i> <span class="t-reg-email-hint">Must end with @alghadalmoshreq.edu.eg. One attempt only.</span></p>
+                </div>
+
+                <div id="reg-error" class="hidden bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded-lg text-sm text-center"></div>
+
+                <button type="submit" id="btn-start" class="w-full mt-4 bg-brand-orange hover:bg-orange-600 text-white font-bold py-4 rounded-lg text-lg transition shadow-[0_0_15px_rgba(249,115,22,0.4)] flex justify-center items-center gap-2">
+                    <span class="t-reg-start">Start Competition</span> <i class="fas fa-play"></i>
+                </button>
+            </form>
+        </section>
+
+        <!-- SCREEN 3: Quiz -->
+        <section id="screen-quiz" class="screen flex-col w-full max-w-3xl glass-panel p-6 sm:p-10 relative">
+            
+            <!-- Top Bar: Progress & Info -->
+            <div class="flex justify-between items-end mb-6 border-b border-gray-700 pb-4">
+                <div>
+                    <p class="text-brand-orange font-bold text-sm sm:text-base" id="quiz-student-name">Student Name</p>
+                    <p class="text-gray-400 text-xs sm:text-sm" id="quiz-student-class">Class</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-gray-300 text-sm sm:text-base font-semibold"><span class="t-question">Question</span> <span id="q-current">1</span> / <span id="q-total">25</span></p>
+                    <div class="w-32 sm:w-48 h-2 bg-gray-700 rounded-full mt-2 overflow-hidden">
+                        <div id="progress-bar" class="h-full bg-brand-orange transition-all duration-300" style="width: 4%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timer and Question -->
+            <div class="flex flex-col sm:flex-row gap-6 items-center sm:items-start mb-8">
+                <!-- Timer SVG -->
+                <div class="relative w-24 h-24 flex-shrink-0">
+                    <svg class="timer-ring w-full h-full" viewBox="0 0 100 100">
+                        <circle class="text-gray-700 stroke-current" stroke-width="8" cx="50" cy="50" r="45" fill="transparent"></circle>
+                        <circle id="timer-path" class="text-brand-orange stroke-current timer-circle" stroke-width="8" stroke-linecap="round" cx="50" cy="50" r="45" fill="transparent"></circle>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center flex-col">
+                        <span id="timer-text" class="text-2xl font-bold">10</span>
+                        <span class="text-[0.6rem] text-gray-400 uppercase t-sec">sec</span>
+                    </div>
+                </div>
+                
+                <div class="flex-grow w-full text-center sm:text-left rtl:sm:text-right">
+                    <h3 id="question-text" class="text-xl sm:text-2xl font-semibold leading-relaxed">Loading question...</h3>
+                </div>
+            </div>
+
+            <!-- Options -->
+            <div id="options-container" class="flex flex-col gap-3 mb-8">
+                <!-- Options injected via JS -->
+            </div>
+
+            <!-- Bottom Actions -->
+            <div class="flex justify-between items-center mt-auto border-t border-gray-700 pt-6">
+                <div id="feedback-msg" class="text-sm font-semibold invisible">Message</div>
+                <button id="btn-next" onclick="nextQuestion()" disabled class="bg-gray-600 text-gray-300 font-bold py-3 px-8 rounded-lg transition opacity-50 cursor-not-allowed flex items-center gap-2">
+                    <span class="t-next">Next</span> <i class="fas fa-arrow-right" id="btn-next-icon"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- SCREEN 4: Results -->
+        <section id="screen-results" class="screen flex-col items-center w-full max-w-xl glass-panel p-10 text-center relative overflow-hidden">
+            <!-- Confetti effect container -->
+            <div id="confetti" class="absolute inset-0 pointer-events-none"></div>
+            
+            <i class="fas fa-trophy text-6xl text-yellow-400 mb-6 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]"></i>
+            <h2 class="text-4xl font-bold text-white mb-2 t-res-congrats">Congratulations!</h2>
+            <p class="text-xl text-gray-300 mb-8 t-res-msg">Thank you for participating in the Computer Competition!</p>
+            
+            <div class="bg-gray-800/80 w-full rounded-xl p-6 mb-8 border border-gray-600 shadow-inner">
+                <div class="grid grid-cols-2 gap-4 text-left rtl:text-right">
+                    <div class="text-gray-400 text-sm t-res-name">Student Name:</div>
+                    <div class="font-bold text-white" id="res-name">-</div>
+                    
+                    <div class="text-gray-400 text-sm t-res-class">Class:</div>
+                    <div class="font-bold text-white" id="res-class">-</div>
+                    
+                    <div class="text-gray-400 text-sm t-res-lang">Language:</div>
+                    <div class="font-bold text-white" id="res-lang">-</div>
+                </div>
+                <div class="mt-6 pt-6 border-t border-gray-700 flex flex-col items-center">
+                    <span class="text-gray-400 text-sm mb-1 t-res-score">Final Score</span>
+                    <div class="text-5xl font-extrabold text-brand-orange">
+                        <span id="res-score">0</span><span class="text-2xl text-gray-500"> / 25</span>
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="location.reload()" class="bg-gray-700 hover:bg-gray-600 text-white py-3 px-6 rounded-lg transition text-sm">
+                <i class="fas fa-home mr-2 rtl:ml-2 rtl:mr-0"></i> <span class="t-res-home">Return to Home</span>
+            </button>
+        </section>
+
+        <!-- SCREEN 5: Admin Login -->
+        <section id="screen-admin-login" class="screen flex-col items-center w-full max-w-md glass-panel p-8">
+             <button onclick="switchScreen('welcome')" class="self-start mb-6 text-gray-400 hover:text-white transition flex items-center gap-2">
+                <i class="fas fa-arrow-left"></i> Back
+            </button>
+            <i class="fas fa-lock text-4xl text-gray-400 mb-4"></i>
+            <h2 class="text-2xl font-bold mb-6 text-center">Admin Access</h2>
+            <form id="admin-login-form" class="w-full flex flex-col gap-4" onsubmit="handleAdminLogin(event)">
+                <input type="password" id="admin-pwd" required placeholder="Enter Admin Password" class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition">
+                <div id="admin-error" class="hidden text-red-400 text-sm text-center">Invalid password</div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition">Login</button>
+            </form>
+            
+        </section>
+
+        <!-- SCREEN 6: Admin Dashboard -->
+        <section id="screen-admin-dashboard" class="screen flex-col w-full max-w-6xl glass-panel p-6 sm:p-8 h-[80vh]">
+            <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
+                <h2 class="text-2xl font-bold flex items-center gap-3"><i class="fas fa-chart-line text-brand-orange"></i> Admin Dashboard</h2>
+                <div class="flex gap-3">
+                    <button onclick="downloadExcel()" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded transition flex items-center gap-2 shadow-lg">
+                        <i class="fas fa-file-excel"></i> Export Excel
+                    </button>
+                    <button onclick="switchScreen('welcome')" class="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded transition">
+                        Logout
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Row -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                    <div class="text-gray-400 text-sm mb-1">Total Participants</div>
+                    <div class="text-2xl font-bold" id="stat-total">0</div>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                    <div class="text-gray-400 text-sm mb-1">English / Arabic</div>
+                    <div class="text-2xl font-bold"><span id="stat-en" class="text-blue-400">0</span> / <span id="stat-ar" class="text-brand-orange">0</span></div>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                    <div class="text-gray-400 text-sm mb-1">Completed</div>
+                    <div class="text-2xl font-bold text-green-400" id="stat-completed">0</div>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                    <div class="text-gray-400 text-sm mb-1">Avg Score</div>
+                    <div class="text-2xl font-bold" id="stat-avg">0</div>
+                </div>
+            </div>
+
+            <!-- Data Table -->
+            <div class="flex-grow overflow-auto bg-gray-900 rounded-lg border border-gray-700 relative">
+                <div id="admin-loading" class="absolute inset-0 bg-gray-900/80 flex items-center justify-center z-10 hidden">
+                    <i class="fas fa-spinner fa-spin text-4xl text-brand-orange"></i>
+                </div>
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="bg-gray-800 text-gray-300 sticky top-0 shadow">
+                        <tr>
+                            <th class="p-3 font-semibold">Date/Time</th>
+                            <th class="p-3 font-semibold">Name</th>
+                            <th class="p-3 font-semibold">Class</th>
+                            <th class="p-3 font-semibold">Email</th>
+                            <th class="p-3 font-semibold">Lang</th>
+                            <th class="p-3 font-semibold text-center">Score</th>
+                            <th class="p-3 font-semibold">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-table-body" class="divide-y divide-gray-800 text-gray-300">
+                        <!-- Rows injected via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Google Apps Script backend
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbym58sp0vTHt89yuU9m-RWEj9IJZ_xIQo8fuluoHSovv9_k6oEbjYKZlmhZunnQL1Nq9Q/exec";
+
+        function appsScriptRequest(params) {
+            return new Promise((resolve, reject) => {
+                const callbackName = "gmiCallback_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+                const script = document.createElement("script");
+                const query = new URLSearchParams({ ...params, callback: callbackName });
+                const timeout = setTimeout(() => {
+                    cleanup();
+                    reject(new Error("APPS_SCRIPT_TIMEOUT"));
+                }, 15000);
+
+                function cleanup() {
+                    clearTimeout(timeout);
+                    delete window[callbackName];
+                    script.remove();
+                }
+
+                window[callbackName] = (data) => {
+                    cleanup();
+                    resolve(data);
+                };
+
+                script.onerror = () => {
+                    cleanup();
+                    reject(new Error("APPS_SCRIPT_NETWORK_ERROR"));
+                };
+
+                script.src = APPS_SCRIPT_URL + "?" + query.toString();
+                document.head.appendChild(script);
+            });
+        }
+
+        window.dbWaitUntilReady = async () => true;
+
+        window.dbCheckEmailExists = async (email) => {
+            // The backend checks duplicates atomically during registration.
+            return false;
+        };
+
+        window.dbCreateParticipant = async (data) => {
+            const result = await appsScriptRequest({
+                action: "register",
+                name: data.name || "",
+                class: data.class || "",
+                email: data.email || "",
+                language: data.language || "",
+                totalQuestions: data.totalQuestions || 0
+            });
+
+            if (!result || !result.success) {
+                const error = new Error(result?.error || "REGISTRATION_FAILED");
+                error.code = result?.error || "REGISTRATION_FAILED";
+                throw error;
+            }
+
+            return JSON.stringify({ row: result.row, token: result.token });
+        };
+
+        window.dbUpdateParticipant = async (participantKey, updates) => {
+            if (!participantKey) throw new Error("MISSING_PARTICIPANT_KEY");
+
+            let key;
+            try {
+                key = typeof participantKey === "string" ? JSON.parse(participantKey) : participantKey;
+            } catch (e) {
+                throw new Error("INVALID_PARTICIPANT_KEY");
+            }
+
+            const result = await appsScriptRequest({
+                action: "update",
+                row: key.row || "",
+                token: key.token || "",
+                score: updates.score ?? 0,
+                totalQuestions: updates.totalQuestions || 0,
+                status: updates.status || "Incomplete"
+            });
+
+            if (!result || !result.success) {
+                const error = new Error(result?.error || "UPDATE_FAILED");
+                error.code = result?.error || "UPDATE_FAILED";
+                throw error;
+            }
+
+            return result;
+        };
+
+        window.dbGetAllParticipants = async () => {
+            const result = await appsScriptRequest({
+                action: "getAll"
+            });
+
+            if (!result || !result.success) {
+                throw new Error(result?.error || "ADMIN_RESULTS_FAILED");
+            }
+
+            return result.data;
+        };
+    </script>
+
+    <script>
+        // --- DATA: QUESTIONS ---
+        const questionsEN = [
+            { q: "Which component is known as the \"brain\" of the computer?", options: ["RAM", "CPU", "Hard Disk", "Monitor"], answer: 1 },
+            { q: "Which CPU component performs arithmetic and logical operations?", options: ["Control Unit", "ALU", "Cache", "Register"], answer: 1 },
+            { q: "What is cloud storage?", options: ["Storing files on remote servers accessed through the Internet", "Storing files inside the keyboard", "Saving files only on CDs", "Storing files in RAM"], answer: 0 },
+            { q: "What happens when a computer loses power while data exists only in RAM?", options: ["The data is normally preserved", "The data is normally lost", "The data moves automatically to the SSD", "The data is transferred to the CPU"], answer: 1 },
+            { q: "Which of the following is an input device?", options: ["Printer", "Monitor", "Keyboard", "Speaker"], answer: 2 },
+            { q: "Which protocol is primarily responsible for securely transferring web pages?", options: ["HTTP", "HTTPS", "FTP", "SMTP"], answer: 1 },
+            { q: "What is an algorithm?", options: ["A computer virus", "A step-by-step procedure for solving a problem", "A storage device", "A type of monitor"], answer: 1 },
+            { q: "Which unit is the largest?", options: ["KB", "MB", "GB", "TB"], answer: 3 },
+            { q: "What is the primary function of a GPU in modern computers?", options: ["Manage passwords", "Perform highly parallel graphical and computational operations", "Replace the operating system", "Store permanent files"], answer: 1 },
+            { q: "Which is an example of AI?", options: ["A basic calculator", "A voice assistant that understands spoken commands", "A USB cable", "A keyboard"], answer: 1 },
+            { q: "Which device forwards data packets between different networks?", options: ["Switch", "Router", "Hub", "Access point only"], answer: 1 },
+            { q: "Which file extension is commonly associated with audio?", options: [".mp3", ".png", ".docx", ".html"], answer: 0 },
+            { q: "What is the output? x=10; if x>5 print A else print B.", options: ["A", "B", "10", "Nothing"], answer: 0 },
+            { q: "What does CSS mainly control on a webpage?", options: ["The appearance and style", "The computer's CPU", "The Internet connection", "The hard drive"], answer: 0 },
+            { q: "Which of these is an operating system?", options: ["Google Chrome", "Windows", "YouTube", "Photoshop"], answer: 1 },
+            { q: "What is the main purpose of a firewall?", options: ["Increase CPU speed", "Filter network traffic according to security rules", "Store passwords", "Create backups"], answer: 1 },
+            { q: "What is a computer virus?", options: ["A hardware component", "A type of malicious software", "A search engine", "An operating system"], answer: 1 },
+            { q: "What is encryption?", options: ["Converting information into a protected form", "Deleting information", "Increasing screen size", "Compressing the keyboard"], answer: 0 },
+            { q: "In generative AI, what is a prompt?", options: ["An instruction or input provided to guide AI output", "A hardware component", "A database password", "A network cable"], answer: 0 },
+            { q: "Which of the following is a web browser?", options: ["Google Chrome", "Windows", "Android", "Linux"], answer: 0 },
+            { q: "Why are software updates important?", options: ["They can improve security and fix problems", "They always make computers slower", "They remove the operating system", "They replace the monitor"], answer: 0 },
+            { q: "Which file extension is commonly associated with an image?", options: [".mp3", ".jpg", ".exe", ".txt"], answer: 1 },
+            { q: "What is Machine Learning?", options: ["Teaching computers to learn patterns from data", "Repairing computer hardware", "Installing Windows", "Building keyboards"], answer: 0 },
+            { q: "What is phishing?", options: ["A method of cooling a computer", "An attempt to trick people into revealing sensitive information", "A programming language", "A type of printer"], answer: 1 },
+            { q: "What is a chatbot?", options: ["A computer virus", "A program designed to communicate with users", "A storage device", "A type of keyboard"], answer: 1 }
+        ];
+
+        const questionsAR = [
+            { q: "أي مكون يُعرف باسم «عقل» الكمبيوتر؟", options: ["ذاكرة الوصول العشوائي (RAM)", "وحدة المعالجة المركزية (CPU)", "القرص الصلب (Hard Disk)", "الشاشة (Monitor)"], answer: 1 },
+            { q: "أي مكون في وحدة المعالجة المركزية (CPU) يقوم بالعمليات الحسابية والمنطقية؟", options: ["وحدة التحكم (Control Unit)", "وحدة الحساب والمنطق (ALU)", "الذاكرة المخبأة (Cache)", "السجل (Register)"], answer: 1 },
+            { q: "ما المقصود بالتخزين السحابي؟", options: ["تخزين الملفات على خوادم بعيدة يمكن الوصول إليها عبر الإنترنت", "تخزين الملفات داخل لوحة المفاتيح", "حفظ الملفات على الأقراص المدمجة (CDs) فقط", "تخزين الملفات في ذاكرة الوصول العشوائي (RAM)"], answer: 0 },
+            { q: "ماذا يحدث عندما يفقد الكمبيوتر الطاقة بينما تكون البيانات موجودة فقط في ذاكرة الوصول العشوائي (RAM)؟", options: ["عادة ما يتم الاحتفاظ بالبيانات", "عادةً ما تفقد البيانات", "تنتقل البيانات تلقائيًا إلى وحدة التخزين SSD", "يتم نقل البيانات إلى وحدة المعالجة المركزية (CPU)"], answer: 1 },
+            { q: "أي مما يلي يعد جهاز إدخال؟", options: ["الطابعة (Printer)", "الشاشة (Monitor)", "لوحة المفاتيح (Keyboard)", "السماعة (Speaker)"], answer: 2 },
+            { q: "أي بروتوكول مسؤول بشكل أساسي عن نقل صفحات الويب بشكل آمن؟", options: ["HTTP", "HTTPS", "FTP", "SMTP"], answer: 1 },
+            { q: "ما المقصود بالخوارزمية (Algorithm)؟", options: ["فيروس كمبيوتر", "إجراء مكون من خطوات متتابعة لحل مشكلة", "جهاز تخزين", "نوع من الشاشات"], answer: 1 },
+            { q: "أي وحدة هي الأكبر؟", options: ["KB", "MB", "GB", "TB"], answer: 3 },
+            { q: "ما الوظيفة الأساسية لوحدة معالجة الرسومات (GPU) في أجهزة الكمبيوتر الحديثة؟", options: ["إدارة كلمات المرور", "تنفيذ العمليات الرسومية والحسابية المتوازية بدرجة كبيرة", "استبدال نظام التشغيل", "تخزين الملفات بشكل دائم"], answer: 1 },
+            { q: "أي مما يلي مثال على الذكاء الاصطناعي (AI)؟", options: ["آلة حاسبة أساسية", "مساعد صوتي يفهم الأوامر المنطوقة", "كابل USB", "لوحة مفاتيح"], answer: 1 },
+            { q: "أي جهاز يقوم بتوجيه حزم البيانات بين الشبكات المختلفة؟", options: ["المبدل (Switch)", "جهاز التوجيه (Router)", "الموزع (Hub)", "نقطة وصول فقط"], answer: 1 },
+            { q: "أي امتداد ملف يرتبط عادة بملف صوتي؟", options: [".mp3", ".png", ".docx", ".html"], answer: 0 },
+            { q: "ما الناتج؟ x=10 إذا كان x>5 اطبع A، وإلا اطبع B.", options: ["A", "B", "10", "لا شيء"], answer: 0 },
+            { q: "ما الذي تتحكم فيه لغة CSS بشكل أساسي في صفحة الويب؟", options: ["المظهر والتنسيق", "وحدة المعالجة المركزية للكمبيوتر", "اتصال الإنترنت", "القرص الصلب"], answer: 0 },
+            { q: "أي مما يلي يعد نظام تشغيل؟", options: ["Google Chrome", "Windows", "YouTube", "Photoshop"], answer: 1 },
+            { q: "ما الهدف الرئيسي من جدار الحماية (Firewall)؟", options: ["زيادة سرعة وحدة المعالجة المركزية", "تصفية حركة مرور الشبكة وفقًا لقواعد الأمان", "تخزين كلمات المرور", "إنشاء نسخ احتياطية"], answer: 1 },
+            { q: "ما هو فيروس الكمبيوتر؟", options: ["مكون من مكونات الأجهزة", "نوع من البرمجيات الضارة", "محرك بحث", "نظام تشغيل"], answer: 1 },
+            { q: "ما المقصود بالتشفير (Encryption)؟", options: ["تحويل المعلومات إلى صيغة مشفّرة لحمايتها", "حذف المعلومات", "زيادة حجم الشاشة", "ضغط لوحة المفاتيح"], answer: 0 },
+            { q: "في الذكاء الاصطناعي التوليدي (Generative AI)، ما المقصود بـ Prompt؟", options: ["تعليمات أو مدخل يتم تقديمه لتوجيه مخرجات الذكاء الاصطناعي", "مكون من مكونات الأجهزة", "كلمة مرور القاعدة بيانات", "كابل شبكة"], answer: 0 },
+            { q: "أي مما يلي يعد متصفح ويب؟", options: ["Google Chrome", "Windows", "Android", "Linux"], answer: 0 },
+            { q: "لماذا تعد تحديثات البرامج مهمة؟", options: ["يمكنها تحسين الأمان وإصلاح المشكلات", "تجعل أجهزة الكمبيوتر أبطأ دائما", "تزيل نظام التشغيل", "تستبدل الشاشة"], answer: 0 },
+            { q: "أي امتداد ملف يرتبط عادة بصورة؟", options: [".mp3", ".jpg", ".exe", ".txt"], answer: 1 },
+            { q: "ما هو التعلم الآلي (Machine Learning)؟", options: ["تعليم أجهزة الكمبيوتر تعلم الأنماط من البيانات", "إصلاح أجهزة الكمبيوتر", "تثبيت Windows", "بناء لوحات المفاتيح"], answer: 0 },
+            { q: "ما المقصود بالتصيد الاحتيالي (Phishing)؟", options: ["طريقة لتبريد الكمبيوتر", "محاولة لخداع الأشخاص للكشف عن معلومات حساسة", "لغة برمجة", "نوع من الطابعات"], answer: 1 },
+            { q: "ما هو برنامج الدردشة الآلية (Chatbot)؟", options: ["فيروس كمبيوتر", "برنامج مصمم للتواصل مع المستخدمين", "جهاز تخزين", "نوع من لوحات المفاتيح"], answer: 1 }
+        ];
+
+        // --- DICTIONARY ---
+        const dict = {
+            en: {
+                schoolName: "AlGhad AlMoshreq Azharian Language Institute",
+                dept: "Computer Department – Secondary Stage",
+                back: "Back",
+                regTitle: "Student Registration",
+                regName: "Full Name",
+                regClass: "Class",
+                regEmail: "School Email",
+                regEmailHint: "Must end with @alghadalmoshreq.edu.eg. One attempt only.",
+                regStart: "Start Competition",
+                errDomain: "Email must end with @alghadalmoshreq.edu.eg",
+                errUsed: "You have already participated in this competition. Each student is allowed one attempt only.",
+                errFields: "Please fill all fields.",
+                errDb: "Connection error. Please try again.",
+                question: "Question",
+                sec: "sec",
+                next: "Next",
+                finish: "Finish Competition",
+                timeoutMsg: "Time's up!",
+                correctMsg: "Correct!",
+                wrongMsg: "Incorrect!",
+                resCongrats: "Congratulations!",
+                resMsg: "Thank you for participating in the Computer Competition!",
+                resName: "Student Name:",
+                resClass: "Class:",
+                resLang: "Language:",
+                resScore: "Final Score",
+                resHome: "Return to Home",
+                dir: "ltr"
+            },
+            ar: {
+                schoolName: "معهد الغد المشرق الأزهري للغات",
+                dept: "قسم الكمبيوتر – الإعدادي والثانوي",
+                back: "رجوع",
+                regTitle: "تسجيل الطالب",
+                regName: "الاسم الرباعي",
+                regClass: "الصف",
+                regEmail: "البريد الإلكتروني المدرسي",
+                regEmailHint: "يجب أن ينتهي بـ @alghadalmoshreq.edu.eg. محاولة واحدة فقط.",
+                regStart: "ابدأ المسابقة",
+                errDomain: "يجب أن ينتهي البريد بـ @alghadalmoshreq.edu.eg",
+                errUsed: "لقد قمت بالمشاركة في المسابقة من قبل. يُسمح لكل طالب بمحاولة واحدة فقط.",
+                errFields: "يرجى تعبئة جميع الحقول.",
+                errDb: "خطأ في الاتصال. يرجى المحاولة مرة أخرى.",
+                question: "السؤال",
+                sec: "ثانية",
+                next: "التالي",
+                finish: "إنهاء المسابقة",
+                timeoutMsg: "انتهى الوقت!",
+                correctMsg: "إجابة صحيحة!",
+                wrongMsg: "إجابة خاطئة!",
+                resCongrats: "مبروك!",
+                resMsg: "شكرًا لمشاركتك في مسابقة الكمبيوتر!",
+                resName: "اسم الطالب:",
+                resClass: "الصف:",
+                resLang: "اللغة:",
+                resScore: "النتيجة النهائية",
+                resHome: "العودة للرئيسية",
+                dir: "rtl"
+            }
+        };
+
+        // --- STATE VARIABLES ---
+        let currentLang = 'en';
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let timerInterval;
+        let timeLeft = 10;
+        let docId = null; // Apps Script participant key (row + token)
+        let isAnswering = false;
+        let participantInfo = {};
+
+        // --- CORE FUNCTIONS ---
+
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(`screen-${screenId}`).classList.add('active');
+        }
+
+        function selectLanguage(lang) {
+            currentLang = lang;
+            currentQuestions = lang === 'en' ? questionsEN : questionsAR;
+            
+            // Apply RTL/LTR
+            if (lang === 'ar') {
+                document.body.classList.add('rtl');
+                document.body.setAttribute('dir', 'rtl');
+                document.getElementById('btn-back-icon').classList.replace('fa-arrow-left', 'fa-arrow-right');
+                document.getElementById('btn-next-icon').classList.replace('fa-arrow-right', 'fa-arrow-left');
+            } else {
+                document.body.classList.remove('rtl');
+                document.body.setAttribute('dir', 'ltr');
+                document.getElementById('btn-back-icon').classList.replace('fa-arrow-right', 'fa-arrow-left');
+                document.getElementById('btn-next-icon').classList.replace('fa-arrow-left', 'fa-arrow-right');
+            }
+
+            // Apply Translations
+            const d = dict[lang];
+            document.querySelector('.t-school-name').textContent = d.schoolName;
+            document.querySelector('.t-dept').textContent = d.dept;
+            document.querySelector('.t-back').textContent = d.back;
+            document.querySelector('.t-reg-title').textContent = d.regTitle;
+            document.querySelector('.t-reg-name').textContent = d.regName;
+            document.querySelector('.t-reg-class').textContent = d.regClass;
+            document.querySelector('.t-reg-email').textContent = d.regEmail;
+            document.querySelector('.t-reg-email-hint').textContent = d.regEmailHint;
+            document.querySelector('.t-reg-start').textContent = d.regStart;
+            document.querySelector('.t-question').textContent = d.question;
+            document.querySelector('.t-sec').textContent = d.sec;
+            document.querySelector('.t-next').textContent = d.next;
+            document.querySelector('.t-res-congrats').textContent = d.resCongrats;
+            document.querySelector('.t-res-msg').textContent = d.resMsg;
+            document.querySelector('.t-res-name').textContent = d.resName;
+            document.querySelector('.t-res-class').textContent = d.resClass;
+            document.querySelector('.t-res-lang').textContent = d.resLang;
+            document.querySelector('.t-res-score').textContent = d.resScore;
+            document.querySelector('.t-res-home').textContent = d.resHome;
+
+            // Reset Error
+            document.getElementById('reg-error').classList.add('hidden');
+            
+            switchScreen('register');
+        }
+
+        function showError(msg) {
+            const errDiv = document.getElementById('reg-error');
+            errDiv.textContent = msg;
+            errDiv.classList.remove('hidden');
+            // Shake effect
+            errDiv.animate([
+                { transform: 'translateX(0)' },
+                { transform: 'translateX(-5px)' },
+                { transform: 'translateX(5px)' },
+                { transform: 'translateX(-5px)' },
+                { transform: 'translateX(5px)' },
+                { transform: 'translateX(0)' }
+            ], { duration: 400 });
+        }
+
+        async function handleRegistration(e) {
+            e.preventDefault();
+
+            const btn = document.getElementById('btn-start');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`;
+
+            const name = document.getElementById('reg-name').value.trim();
+            const pClass = document.getElementById('reg-class').value.trim();
+            const email = document.getElementById('reg-email').value.trim().toLowerCase();
+            const d = dict[currentLang];
+
+            const resetBtn = () => {
+                btn.disabled = false;
+                btn.innerHTML = `<span class="t-reg-start">${d.regStart}</span> <i class="fas fa-play"></i>`;
+            };
+
+            if (!name || !pClass || !email) {
+                showError(d.errFields);
+                resetBtn();
+                return;
+            }
+
+            if (!email.endsWith('@alghadalmoshreq.edu.eg')) {
+                showError(d.errDomain);
+                resetBtn();
+                return;
+            }
+
+            try {
+                participantInfo = {
+                    name,
+                    class: pClass,
+                    email,
+                    language: currentLang === 'en' ? 'English' : 'Arabic',
+                    score: 0,
+                    totalQuestions: currentQuestions.length,
+                    answeredQuestions: 0,
+                    status: 'Incomplete'
+                };
+
+                docId = await window.dbCreateParticipant(participantInfo);
+
+            } catch (error) {
+                console.error("Registration/database error:", error);
+
+                if (error.code === 'EMAIL_ALREADY_USED' || error.message === 'EMAIL_ALREADY_USED') {
+                    showError(d.errUsed);
+                } else {
+                    showError(d.errDb);
+                }
+
+                resetBtn();
+                return;
+            }
+
+            document.getElementById('quiz-student-name').textContent = name;
+            document.getElementById('quiz-student-class').textContent = pClass;
+            document.getElementById('q-total').textContent = currentQuestions.length;
+
+            currentIndex = 0;
+            score = 0;
+
+            switchScreen('quiz');
+            loadQuestion();
+        }
+
+        function playBeep() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                const ctx = new AudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(400, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.3);
+            } catch (e) {
+                console.log("Audio blocked by browser policy");
+            }
+        }
+
+        function loadQuestion() {
+            if (currentIndex >= currentQuestions.length) {
+                finishCompetition();
+                return;
+            }
+
+            isAnswering = false;
+            const q = currentQuestions[currentIndex];
+            
+            // Update UI
+            document.getElementById('q-current').textContent = currentIndex + 1;
+            document.getElementById('question-text').textContent = q.q;
+            
+            // Progress Bar
+            const prog = ((currentIndex) / currentQuestions.length) * 100;
+            document.getElementById('progress-bar').style.width = `${Math.max(4, prog)}%`;
+
+            // Setup Options
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `option-btn w-full text-left rtl:text-right bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-lg p-4 text-white font-medium shadow-sm flex items-center justify-between`;
+                
+                const labelMap = ['A', 'B', 'C', 'D'];
+                const labelMapAr = ['أ', 'ب', 'ج', 'د'];
+                const label = currentLang === 'en' ? labelMap[idx] : labelMapAr[idx];
+                
+                const spanLabel = `<span class="bg-gray-900 text-gray-400 rounded w-6 h-6 flex items-center justify-center text-xs mr-3 rtl:mr-0 rtl:ml-3 shrink-0">${label}</span>`;
+                btn.innerHTML = `<div class="flex items-center">${spanLabel} <span>${opt}</span></div> <i class="fas fa-check-circle opacity-0 shrink-0"></i>`;
+                
+                btn.onclick = () => selectAnswer(idx, btn);
+                container.appendChild(btn);
+            });
+
+            // Reset UI states
+            document.getElementById('feedback-msg').style.visibility = 'hidden';
+            const nextBtn = document.getElementById('btn-next');
+            nextBtn.disabled = true;
+            nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            nextBtn.classList.remove('bg-brand-orange', 'hover:bg-orange-600', 'text-white');
+            nextBtn.classList.add('bg-gray-600', 'text-gray-300');
+            
+            // Final button check
+            if (currentIndex === currentQuestions.length - 1) {
+                nextBtn.querySelector('span').textContent = dict[currentLang].finish;
+                nextBtn.querySelector('i').className = 'fas fa-flag-checkered';
+            } else {
+                nextBtn.querySelector('span').textContent = dict[currentLang].next;
+                nextBtn.querySelector('i').className = currentLang === 'en' ? 'fas fa-arrow-right' : 'fas fa-arrow-left';
+            }
+
+            startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 10;
+            updateTimerUI();
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerUI();
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleTimeOut();
+                }
+            }, 1000);
+        }
+
+        function updateTimerUI() {
+            document.getElementById('timer-text').textContent = timeLeft;
+            const circle = document.getElementById('timer-path');
+            const circumference = 283;
+            const offset = circumference - (timeLeft / 10) * circumference;
+            circle.style.strokeDashoffset = offset;
+            
+            if (timeLeft <= 3) {
+                circle.classList.remove('text-brand-orange');
+                circle.classList.add('text-red-500');
+                document.getElementById('timer-text').classList.add('text-red-500', 'animate-pulse');
+            } else {
+                circle.classList.add('text-brand-orange');
+                circle.classList.remove('text-red-500');
+                document.getElementById('timer-text').classList.remove('text-red-500', 'animate-pulse');
+            }
+        }
+
+        function handleTimeOut() {
+            clearInterval(timerInterval);
+            playBeep();
+
+            // If the student already answered, automatically move to the next question.
+            if (isAnswering) {
+                setTimeout(() => {
+                    nextQuestion();
+                }, 800);
+                return;
+            }
+
+            isAnswering = true;
+
+            // Disable options
+            document.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
+
+            const fb = document.getElementById('feedback-msg');
+            fb.textContent = dict[currentLang].timeoutMsg;
+            fb.className = 'text-sm font-bold text-red-400 visible';
+
+            // No database request during the quiz.
+
+            // Auto advance after short delay
+            setTimeout(() => {
+                nextQuestion();
+            }, 800);
+        }
+
+        async function selectAnswer(selectedIndex, btnElement) {
+            if (isAnswering) return;
+            isAnswering = true;
+
+            // Keep the timer running after the answer.
+            // When the 10-second question time ends, the next question opens automatically.
+
+            // Highlight selected
+            document.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
+            btnElement.classList.add('selected');
+            btnElement.querySelector('i').classList.remove('opacity-0');
+            
+            const q = currentQuestions[currentIndex];
+            const isCorrect = selectedIndex === q.answer;
+            
+            const fb = document.getElementById('feedback-msg');
+            fb.style.visibility = 'visible';
+
+            if (isCorrect) {
+                score++;
+                fb.textContent = dict[currentLang].correctMsg;
+                fb.className = 'text-sm font-bold text-green-400 visible';
+            } else {
+                fb.textContent = dict[currentLang].wrongMsg;
+                fb.className = 'text-sm font-bold text-red-400 visible';
+            }
+
+            const nextBtn = document.getElementById('btn-next');
+
+            // No database request here.
+            // The score stays in the browser during the quiz.
+            // It is saved only once at the end.
+
+            // Enable Next Button
+            nextBtn.disabled = false;
+            nextBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-600', 'text-gray-300');
+            nextBtn.classList.add('bg-brand-orange', 'hover:bg-orange-600', 'text-white', 'shadow-lg');
+        }
+
+        async function saveProgress() {
+            // Disabled intentionally.
+            // The final score is saved once in finishCompetition().
+            return true;
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+            loadQuestion();
+        }
+
+        async function finishCompetition() {
+            clearInterval(timerInterval);
+            document.getElementById('progress-bar').style.width = `100%`;
+
+            try {
+                await window.dbUpdateParticipant(docId, {
+                    status: 'Completed',
+                    score: score
+                });
+            } catch (error) {
+                console.error("Final save failed:", error);
+                alert(dict[currentLang].errDb);
+                return;
+            }
+
+            participantInfo.status = 'Completed';
+
+            document.getElementById('res-name').textContent = participantInfo.name;
+            document.getElementById('res-class').textContent = participantInfo.class;
+            document.getElementById('res-lang').textContent = participantInfo.language;
+            document.getElementById('res-score').textContent = score;
+
+            switchScreen('results');
+        }
+
+        function showAdminLogin() {
+            document.getElementById('admin-pwd').value = '';
+            document.getElementById('admin-error').classList.add('hidden');
+            document.body.classList.remove('rtl');
+            document.body.setAttribute('dir', 'ltr');
+            switchScreen('admin-login');
+        }
+
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const pwd = document.getElementById('admin-pwd').value;
+            if (pwd === 'Medo2002@2002') {
+                loadAdminDashboard();
+            } else {
+                document.getElementById('admin-error').classList.remove('hidden');
+            }
+        }
+
+        let adminDataCache = [];
+
+        // Escape user-provided text before placing it in HTML to prevent markup injection.
+        function escapeHTML(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            })[char]);
+        }
+
+        async function loadAdminDashboard() {
+            switchScreen('admin-dashboard');
+            document.getElementById('admin-loading').classList.remove('hidden');
+            
+            try {
+                adminDataCache = await window.dbGetAllParticipants();
+            } catch (error) {
+                console.error("Admin results error:", error);
+                document.getElementById('admin-loading').classList.add('hidden');
+                alert("Failed to load admin data: " + error.message);
+                return;
+            }
+            
+            // Calculate Stats
+            let total = adminDataCache.length;
+            let en = 0, ar = 0, completed = 0, totalScore = 0;
+            
+            const tbody = document.getElementById('admin-table-body');
+            tbody.innerHTML = '';
+
+            adminDataCache.forEach(p => {
+                if(p.language === 'English') en++;
+                if(p.language === 'Arabic') ar++;
+                if(p.status === 'Completed') completed++;
+                totalScore += (p.score || 0);
+
+                const dateObj = new Date(p.createdAt);
+                const dateStr = isNaN(dateObj) ? '-' : dateObj.toLocaleString();
+                
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-800 transition";
+                tr.innerHTML = `
+                    <td class="p-3">${dateStr}</td>
+                    <td class="p-3 font-medium">${escapeHTML(p.name || '-')}</td>
+                    <td class="p-3">${escapeHTML(p.class || '-')}</td>
+                    <td class="p-3 text-gray-400">${escapeHTML(p.email || '-')}</td>
+                    <td class="p-3">${p.language === 'English' ? '<span class="text-blue-400">EN</span>' : '<span class="text-brand-orange">AR</span>'}</td>
+                    <td class="p-3 text-center font-bold">${p.score || 0}/${p.totalQuestions || 25}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-1 rounded text-xs ${p.status === 'Completed' ? 'bg-green-900/50 text-green-400' : 'bg-yellow-900/50 text-yellow-400'}">
+                            ${escapeHTML(p.status || 'Unknown')}
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-en').textContent = en;
+            document.getElementById('stat-ar').textContent = ar;
+            document.getElementById('stat-completed').textContent = completed;
+            document.getElementById('stat-avg').textContent = total > 0 ? (totalScore / total).toFixed(1) : 0;
+
+            document.getElementById('admin-loading').classList.add('hidden');
+        }
+
+        function downloadExcel() {
+            if (adminDataCache.length === 0) {
+                alert("No data to export.");
+                return;
+            }
+
+            const exportData = adminDataCache.map(p => {
+                const d = new Date(p.createdAt);
+                return {
+                    "Student Name": p.name,
+                    "Class": p.class,
+                    "School Email": p.email,
+                    "Language": p.language,
+                    "Score": p.score || 0,
+                    "Total Questions": p.totalQuestions || 25,
+                    "Answered Questions": p.answeredQuestions || 0,
+                    "Completion Status": p.status,
+                    "Date": isNaN(d) ? '-' : d.toLocaleDateString(),
+                    "Time": isNaN(d) ? '-' : d.toLocaleTimeString()
+                };
+            });
+
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Competition Results");
+            
+            const filename = `GMI_Computer_Competition_Results_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(workbook, filename);
+        }
+
+    </script>
+</body>
+</html>
