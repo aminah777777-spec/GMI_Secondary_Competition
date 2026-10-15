@@ -538,7 +538,7 @@
         let currentIndex = 0;
         let score = 0;
         let timerInterval;
-        let timeLeft = 300;
+        let timeLeft = 240;
         let docId = null; // Apps Script participant key (row + token)
         let isAnswering = false;
         let participantInfo = {};
@@ -552,7 +552,26 @@
 
         function selectLanguage(lang) {
             currentLang = lang;
-            currentQuestions = lang === 'en' ? questionsEN : questionsAR;
+            const sourceQuestions = lang === 'en' ? questionsEN : questionsAR;
+
+            // Randomize choices for every question without changing which answer is correct.
+            currentQuestions = sourceQuestions.map(question => {
+                const shuffledOptions = question.options.map((text, originalIndex) => ({
+                    text,
+                    originalIndex
+                }));
+
+                for (let i = shuffledOptions.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffledOptions[i], shuffledOptions[j]] = [shuffledOptions[j], shuffledOptions[i]];
+                }
+
+                return {
+                    ...question,
+                    options: shuffledOptions.map(option => option.text),
+                    answer: shuffledOptions.findIndex(option => option.originalIndex === question.answer)
+                };
+            });
             
             // Apply RTL/LTR
             if (lang === 'ar') {
@@ -767,7 +786,7 @@
 
         function startGlobalTimer() {
             clearInterval(timerInterval);
-            timeLeft = 300; // 5 minutes = 300 seconds
+            timeLeft = 240; // 4 minutes = 240 seconds
             updateTimerUI();
 
             timerInterval = setInterval(() => {
@@ -795,8 +814,8 @@
             const circle = document.getElementById('timer-path');
             const circumference = 283;
 
-            // Progress based on the full 360-second competition duration
-            const offset = circumference - (timeLeft / 300) * circumference;
+            // Progress based on the full 240-second competition duration
+            const offset = circumference - (timeLeft / 240) * circumference;
             circle.style.strokeDashoffset = offset;
 
             // Red + pulse during the last 30 seconds
